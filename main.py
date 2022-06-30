@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By  # HTML Identifiers
 from selenium.webdriver.chrome.options import Options
 import time  # System pausing
 import course
+import gcal
 
 
 ### ------ SELENIUM WEB SCRAPING ------ ###
@@ -25,7 +26,7 @@ def main():
 
     # Student Calendar
     student_schedule_data = []  # Default Python list
-    student_courses = []
+    student_events = []
     student_df = []  # Pandas Data Frame
 
     # Instantiate the Selenium Chrome Driver
@@ -77,8 +78,7 @@ def main():
     row_headers = [elem.text.replace('\n', " ") for elem in
                    driver.find_elements(by=By.CLASS_NAME, value="periodLabel")]
     column_headers = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Monday", "Tuesday", "Wednesday",
-                      "Thursday",
-                      "Friday"]
+                      "Thursday", "Friday"]
 
     # Use row headers (time blocks) to identify classes under time-block, and append to schedule_data
     for header in row_headers:
@@ -88,6 +88,7 @@ def main():
         student_schedule_data.append(week)
 
     # Create a Pandas Data Frame to clearly display data
+
     row_headers = [x.split(" ")[-1] for x in row_headers]
 
     student_df = pd.DataFrame(data=student_schedule_data, index=row_headers, columns=column_headers)
@@ -108,28 +109,34 @@ def main():
     print("----- Orange Week -----")
     print(orange_student_df.to_string(), "\n")
 
+    time.sleep(5)
+    # Convert Pandas Data Frame to iterable 2D numpy array
     blue_week = blue_student_df.to_numpy()
 
-    time.sleep(5)
-
+    # Create a new course object with all metadata for every course in week
     for row_idx, row in enumerate(blue_week):
         for col_idx, col in enumerate(row):
             print("--------")
 
+            # Check if column is a parsable string (not just whitespace)
             if isinstance(col, str) and not (col.isspace() or not col):
                 try:
+                    # Split & unpack column into course_name and course_location
+                    # "ENFV WRN203" -> "ENFV", "WRN203"
                     course_name, course_location = col.split(" ")
 
+                # If location is omitted, set course_name to column 
                 except ValueError:
                     course_name = col
                     course_location = ""
 
+                # Unpack start and end times from the row header that the current column is located in
                 start_time, end_time = row_headers[row_idx].split('-')
 
-                student_course = course.Course(name=course_name, start_time=start_time, end_time=end_time,
-                                               day=col_idx, location=course_location)
-                student_courses.append(course)
-                student_course.print_info()
+                course_metadata = course.Course(name=course_name, start_time=start_time, end_time=end_time,
+                                                day=col_idx, period=row_idx, location=course_location)
+                student_events.append(course_metadata)
+                course_metadata.print_info()
 
             else:
                 if 5 <= row_idx <= 6:
@@ -137,8 +144,33 @@ def main():
                 else:
                     print("Free")
 
-    time.sleep(10)
+    ### ------ UPLOADING GOOGLE CALENDAR EVENTS ------ ###
+
+    creds = gcal.load_credentials()
+
+    while True:
+        try:
+            response = input("[CREATE] or [DELETE] events? \n").lower()
+
+            if response == 'create':
+                for student_event in student_events:
+                    student_event.print_info()
+                    # Create google calendar event
+                    # Add ID to event_IDS
+                    gcal.create_event(creds=creds, event=student_event.generate_event())
+                # Upload to JSON
+                gcal.log_event_ids()
+            elif response == 'delete':
+                gcal.delete_all_events(creds=creds)
+
+            break
+        except TypeError or ValueError:
+            pass
+
+    time.sleep(5)
     driver.quit()
+
+    # idea: store a json file of all of user's calendar ids
 
 
 if __name__ == '__main__':
