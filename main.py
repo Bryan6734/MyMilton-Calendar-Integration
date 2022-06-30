@@ -4,7 +4,10 @@ import pandas as pd  # Pandas for data formatting
 from selenium import webdriver  # Google Chrome driver
 from selenium.webdriver.chrome.service import Service  # Loading URL
 from selenium.webdriver.common.by import By  # HTML Identifiers
+from selenium.webdriver.chrome.options import Options
 import time  # System pausing
+import course
+
 
 ### ------ SELENIUM WEB SCRAPING ------ ###
 
@@ -26,8 +29,11 @@ def main():
     student_df = []  # Pandas Data Frame
 
     # Instantiate the Selenium Chrome Driver
+    chrome_options = Options()
+    chrome_options.add_argument("--window-size=1920,800")
+
     service = Service(executable_path="/Users/bryansukidi/Desktop/CS Projects/chromedriver")
-    driver = webdriver.Chrome(service=service)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # Open the myMilton login website
     driver.get("https://mymustangs.milton.edu/student/index.cfm?")
@@ -61,8 +67,8 @@ def main():
     # ADVS-1 HELP-1 CLUB3-1  CLMTG-3  CLUB4-1 ADVS-1 HELP-1 CLUB6-1
 
     # Open the myMilton schedule page
-    driver.get("https://mymustangs.milton.edu/student/myschedule/fetch.cfm")
-    print("Accessing Website: ", driver.title, '\n')
+    driver.get("https://mymustangs.milton.edu/student/myschedule/fetch.cfm?TID=2&vSID=SUKB240&pdf=0")
+    print("Accessing Website: ", driver.title)
 
     # Get all table elements
     all_schedule_elements = [elem.text.replace('\n', ' ') for elem in driver.find_elements(by=By.TAG_NAME, value="td")]
@@ -70,7 +76,8 @@ def main():
     # Get time blocks "{ordinal} {XX:XX}" as row headers
     row_headers = [elem.text.replace('\n', " ") for elem in
                    driver.find_elements(by=By.CLASS_NAME, value="periodLabel")]
-    column_headers = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Monday", "Tuesday", "Wednesday", "Thursday",
+    column_headers = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Monday", "Tuesday", "Wednesday",
+                      "Thursday",
                       "Friday"]
 
     # Use row headers (time blocks) to identify classes under time-block, and append to schedule_data
@@ -81,6 +88,8 @@ def main():
         student_schedule_data.append(week)
 
     # Create a Pandas Data Frame to clearly display data
+    row_headers = [x.split(" ")[-1] for x in row_headers]
+
     student_df = pd.DataFrame(data=student_schedule_data, index=row_headers, columns=column_headers)
 
     # Configure Pandas Data Frame printing settings
@@ -94,14 +103,43 @@ def main():
     orange_student_df = student_df.iloc[:, 5:]
 
     print("----- Blue Week -----")
-    print(blue_student_df, "\n")
+    print(blue_student_df.to_string(), "\n")
 
     print("----- Orange Week -----")
-    print(orange_student_df, "\n")
+    print(orange_student_df.to_string(), "\n")
+
+    blue_week = blue_student_df.to_numpy()
+
+    time.sleep(5)
+
+    for row_idx, row in enumerate(blue_week):
+        for col_idx, col in enumerate(row):
+            print("--------")
+
+            if isinstance(col, str) and not (col.isspace() or not col):
+                try:
+                    course_name, course_location = col.split(" ")
+
+                except ValueError:
+                    course_name = col
+                    course_location = ""
+
+                start_time, end_time = row_headers[row_idx].split('-')
+
+                student_course = course.Course(name=course_name, start_time=start_time, end_time=end_time,
+                                               day=col_idx, location=course_location)
+                student_courses.append(course)
+                student_course.print_info()
+
+            else:
+                if 5 <= row_idx <= 6:
+                    print("Lunch")
+                else:
+                    print("Free")
 
     time.sleep(10)
     driver.quit()
 
+
 if __name__ == '__main__':
     main()
-
