@@ -7,24 +7,27 @@ import datetime
 
 
 class Course:
-    def __init__(self, name, start_time, end_time, day, period, location=None):
+    def __init__(self, name, start_time, end_time, day, period, week, location=None):
         self.name = name
         self.location = location
         self.start_time = start_time
         self.end_time = end_time
         self.day = day
+        self.week = week
         self.period = period
 
         # Convert into ISO datetime format to be passed into Google Calendar API
         self.start_datetime_ISO, self.end_datetime_ISO = self.get_datetime()
 
     def print_info(self):
-        print(self.name, self.location, self.start_time, self.end_time, self.day, sep=" – ")
+        print(self.name, self.location, self.start_time, self.end_time, self.day, self.week, sep=" – ")
 
     def get_datetime(self):
         year = 2022
         month = 9
         day = 12 + self.day
+        if 'orange' in self.week:
+            day += 7
 
         # Unpack hours and minutes
         # Convert hours to military time
@@ -48,6 +51,7 @@ class Course:
         return {
             'summary': self.name,
             'location': self.location,
+            'colorId': {'blue': 7, 'orange': 4}[self.week],
             'start': {
                 'dateTime': self.start_datetime_ISO,
                 'timeZone': 'America/New_York'
