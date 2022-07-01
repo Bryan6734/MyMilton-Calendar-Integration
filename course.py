@@ -57,6 +57,6 @@ class Course:
                 'timeZone': 'America/New_York'
             },
             'recurrence': [
-                'RRULE:FREQ=WEEKLY;UNTIL=20220801T170000Z',
+                f'RRULE:FREQ=WEEKLY;UNTIL=20221007;INTERVAL=2'
             ]
         }

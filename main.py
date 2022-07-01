@@ -125,7 +125,7 @@ def main():
                     # "ENFV WRN203" -> "ENFV", "WRN203"
                     course_name, course_location = col.split(" ")
 
-                # If location is omitted, set course_name to column 
+                # If location is omitted, set course_name to column
                 except ValueError:
                     course_name = col
                     course_location = ""
@@ -163,14 +163,13 @@ def main():
             elif response == 'delete':
                 gcal.delete_all_events(creds=creds)
 
-            break
         except TypeError or ValueError:
             pass
+        except EOFError:
+            break
 
     time.sleep(5)
     driver.quit()
-
-    # idea: store a json file of all of user's calendar ids
 
 
 if __name__ == '__main__':
