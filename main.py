@@ -1,13 +1,15 @@
 # Import packages
-import json  # Reading username & password
-import pandas as pd  # Pandas for data formatting
-from selenium import webdriver  # Google Chrome driver
-from selenium.webdriver.chrome.service import Service  # Loading URL
-from selenium.webdriver.common.by import By  # HTML Identifiers
-from selenium.webdriver.chrome.options import Options
 import time  # System pausing
 
-import course, student, gcal  # Project imports
+import pandas as pd  # Pandas for data formatting
+from selenium import webdriver  # Google Chrome driver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service  # Loading URL
+from selenium.webdriver.common.by import By  # HTML Identifiers
+
+import course  # Project imports
+import gcal
+import student
 
 ## Global Variable Declarations
 USER_FIELD_NAME = "UserLogin"  # HTML identifier
@@ -140,10 +142,14 @@ def main():
                     # Create google calendar event
                     # Add ID to event_IDS
                     gcal.create_event(creds=creds, event=student_event.generate_event())
+                    student_event.event_id = gcal.all_event_ids[-1]
+                    print("Event ID: ", student_event.event_id)
                 # Upload to JSON
                 gcal.log_event_ids()
+                print("event ids: ", gcal.all_event_ids)
             elif response == 'delete':
                 gcal.delete_all_events(creds=creds)
+                break
 
         except TypeError or ValueError:
             pass

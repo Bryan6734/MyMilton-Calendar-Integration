@@ -15,6 +15,7 @@ class Course:
         self.day = day
         self.week = week
         self.period = period
+        self.event_id = ''
 
         # Convert into ISO datetime format to be passed into Google Calendar API
         self.start_datetime_ISO, self.end_datetime_ISO = self.get_datetime()
@@ -51,7 +52,7 @@ class Course:
         return {
             'summary': self.name,
             'location': self.location,
-            'colorId': {'blue': 7, 'orange': 4}[self.week],
+            'colorId': {'blue': 7, 'orange': 5}[self.week],
             'start': {
                 'dateTime': self.start_datetime_ISO,
                 'timeZone': 'America/New_York'
@@ -59,8 +60,9 @@ class Course:
             'end': {
                 'dateTime': self.end_datetime_ISO,
                 'timeZone': 'America/New_York'
-            },
-            'recurrence': [
-                f'RRULE:FREQ=WEEKLY;UNTIL=20221007;INTERVAL=2'
-            ]
+            }
+            # ,
+            # 'recurrence': [
+            #     f'RRULE:FREQ=WEEKLY;UNTIL=20221007;INTERVAL=2'
+            # ]
         }
