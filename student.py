@@ -1,5 +1,6 @@
 import json
 import os
+from json import JSONDecodeError
 
 
 class Student:
@@ -9,19 +10,20 @@ class Student:
         self.password = None
         self.schedule = []
         self.gcal_schedule = []
-        self.load_login()
 
     def load_login(self):
-
-        if os.path.exists('login_info.json'):
-            with open('login_info.json', 'r') as f:
-                creds = json.load(f)
-                self.username = creds['username']
-                self.password = creds['password']
-        else:
-            while True:
-                try:
-                    self.username = input("Username: ")
-                    self.password = input("Password: ")
-                except ValueError or TypeError:
-                    pass
+        try:
+            if os.path.exists('login_info.json'):
+                with open('login_info.json', 'r') as login_info:
+                    login_info = json.load(login_info)
+                    self.username = login_info['username']
+                    self.password = login_info['password']
+            else:
+                self.username = input("Username: ")
+                self.password = input("Password: ")
+                with open('login_info.json', 'w') as login_info:
+                    json.dump({'username': self.username, 'password': self.password}, login_info)
+        except JSONDecodeError:
+            print("Invalid login info")
+            os.remove('login_info.json')
+            self.load_login()
