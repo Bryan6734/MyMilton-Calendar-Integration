@@ -6,7 +6,6 @@ from selenium import webdriver  # Google Chrome driver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service  # Loading URL
 from selenium.webdriver.common.by import By  # HTML Identifiers
-
 import course  # Project imports
 import gcal
 import student
