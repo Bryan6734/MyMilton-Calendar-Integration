@@ -15,7 +15,9 @@ import student
 USER_FIELD_NAME = "UserLogin"  # HTML identifier
 PASSWORD_FIELD_NAME = "UserPassword"  # HTML identifier
 SUBMIT_FIELD_NAME = "df"  # HTML identifier
+SCHEDULE_URL = "https://mymustangs.milton.edu/student/myschedule/fetch.cfm?TID=2&vSID=SUKB240&pdf=0"
 
+# Instantiate a new Student object
 student = student.Student()
 
 
@@ -23,10 +25,14 @@ student = student.Student()
 
 # HTML Field Names
 def main():
-    # Instantiate the Selenium Chrome Driver
+    # Load student login info
+    student.load_login()
+
+    # Configure Selenium settings
     chrome_options = Options()
     chrome_options.add_argument("--window-size=1920,800")
 
+    # Instantiate the Selenium Chrome Driver
     service = Service(executable_path="/Users/bryansukidi/Desktop/CS Projects/chromedriver")
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
@@ -52,10 +58,13 @@ def main():
     submit_button = driver.find_element(by=By.NAME, value=SUBMIT_FIELD_NAME)
     submit_button.click()
 
+    # Validate Login
+    print(">>> Validating Login")
+    print("Accessing Website: ", driver.title)
     ### ------ EXTRACTING SCHEDULE DATA ------ ###
 
     # Open the myMilton schedule page
-    driver.get("https://mymustangs.milton.edu/student/myschedule/fetch.cfm?TID=2&vSID=SUKB240&pdf=0")
+    driver.get(SCHEDULE_URL)
     print("Accessing Website: ", driver.title)
 
     # Get all table elements from HTML
@@ -94,8 +103,6 @@ def main():
     print("----- Orange Week -----")
     print(student.schedule['orange'].to_string(), "\n")
 
-    time.sleep(5)
-
     for week in student.schedule:
         week_color = week
         week = student.schedule[week].to_numpy()
@@ -131,6 +138,8 @@ def main():
     ### ------ UPLOADING GOOGLE CALENDAR EVENTS ------ ###
 
     creds = gcal.load_credentials()
+    # gcal.select_calendar_list(creds=creds)
+    # gcal.create_calendar_list(creds=creds, week='blue', hex_code='#003366')
 
     while True:
         try:
@@ -156,7 +165,6 @@ def main():
         except EOFError:
             break
 
-    time.sleep(5)
     driver.quit()
 
 
