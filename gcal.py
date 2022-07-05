@@ -42,6 +42,65 @@ def main():
     print("ran")
 
 
+## CalenderList API Functions
+
+def select_calendar_list(creds):
+    service = build('calendar', 'v3', credentials=creds)
+    page_token = None
+
+    # List all calendars
+    while True:
+        calendar_list = service.calendarList().list(pageToken=page_token).execute()
+        # Iterate through each of the user's calendars and print the calendar ID and name
+        for idx, calendar_list_entry in enumerate(calendar_list['items']):
+            print(idx, calendar_list_entry['summary'], calendar_list_entry['id'], sep=" ")
+        page_token = calendar_list.get('nextPageToken')
+        if not page_token:
+            break
+
+    # Get user input
+    while True:
+        try:
+            ids = []
+            blue_choice = int(input("Select a calendar for BLUE week: "))
+            orange_choice = int(input("Select a calendar for ORANGE week: "))
+
+            for choice in [blue_choice, orange_choice]:
+                if 0 <= choice < len(calendar_list['items']):
+                    ids.append(calendar_list['items'][choice]['id'])
+                else:
+                    print("Invalid input")
+
+            if ids and len(ids) == len(set(ids)):
+                print(f"Calendars Selected:",
+                      f"Blue: {calendar_list['items'][blue_choice]['summary']}",
+                      f"Orange: {calendar_list['items'][orange_choice]['summary']}", sep="\n")
+                choice = input("Is this correct? (y/n) ").lower().strip()
+                if choice == "y":
+                    break
+        except ValueError:
+            print("Invalid input")
+    print(ids)
+    return ids
+
+
+def create_calendar_list(creds):
+    service = build('calendar', 'v3', credentials=creds)
+
+
+def create_calendar_list(creds, week, hex_code):
+    calendar_list = {
+        'id': 'TEST CALENDAR',
+        'backgroundColor': hex_code
+    }
+
+    service = build('calendar', 'v3', credentials=creds)
+    created_calendar_list_entry = service.calendarList().insert(body=calendar_list).execute()
+    print(created_calendar_list_entry['summary'])
+
+
+## CalendarEvent API Functions
+
 def log_event_ids():
     # Log all_event_ids to JSON file
     with open('event_ids.json', 'w') as f:
