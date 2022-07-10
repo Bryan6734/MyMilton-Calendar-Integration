@@ -14,54 +14,47 @@ import student
 USER_FIELD_NAME = "UserLogin"  # HTML identifier
 PASSWORD_FIELD_NAME = "UserPassword"  # HTML identifier
 SUBMIT_FIELD_NAME = "df"  # HTML identifier
+LOGIN_URL = "https://mymustangs.milton.edu/student/index.cfm?"
 SCHEDULE_URL = "https://mymustangs.milton.edu/student/myschedule/fetch.cfm?TID=2&vSID=SUKB240&pdf=0"
 
 # Instantiate a new Student object
 student = student.Student()
 
+# Load student login info
+student.load_login()
+
+# Configure Selenium settings
+chrome_options = Options()
+chrome_options.add_argument("--window-size=1920,800")
+chrome_options.add_argument("--headless")
+
+# Instantiate the Selenium Chrome Driver
+service = Service(executable_path="/Users/bryansukidi/Desktop/CS Projects/chromedriver")
+driver = webdriver.Chrome(service=service, options=chrome_options)
+
 ### ------ SELENIUM WEB SCRAPING ------ ###
 
-# HTML Field Names
-def main():
-    # Load student login info
-    student.load_login()
-
-    # Configure Selenium settings
-    chrome_options = Options()
-    chrome_options.add_argument("--window-size=1920,800")
-    chrome_options.add_argument("--headless")
-
-    # Instantiate the Selenium Chrome Driver
-    service = Service(executable_path="/Users/bryansukidi/Desktop/CS Projects/chromedriver")
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
-    # Open the myMilton login website
-    driver.get("https://mymustangs.milton.edu/student/index.cfm?")
-    print("Accessing Website: ", driver.title)
-
-    # Wait 0.5 seconds for website loading time (Selenium is asynchronous)
-    driver.implicitly_wait(0.5)
+def post_login():
+    # Load the login page
+    driver.get(LOGIN_URL)
 
     # Post username to username text box
-    print(">>> Entering USERNAME")
     username_field = driver.find_element(by=By.NAME, value=USER_FIELD_NAME)
     username_field.send_keys(student.username)
 
-    print(">>> Entering PASSWORD")
     # Post password to password text box
     password_field = driver.find_element(by=By.NAME, value=PASSWORD_FIELD_NAME)
     password_field.send_keys(student.password)
 
-    print(">>> Submitting FORM")
     # Click submit button
     submit_button = driver.find_element(by=By.NAME, value=SUBMIT_FIELD_NAME)
     submit_button.click()
 
-    # Validate Login
-    print(">>> Validating Login")
-    print("Accessing Website: ", driver.title)
-    ### ------ EXTRACTING SCHEDULE DATA ------ ###
+    # TODO: Login validation system
 
+    time.sleep(1)
+
+def scrape_schedule_page():
     # Open the myMilton schedule page
     driver.get(SCHEDULE_URL)
     print("Accessing Website: ", driver.title)
@@ -70,21 +63,24 @@ def main():
     html_elements = [elem.text.replace('\n', ' ') for elem in driver.find_elements(by=By.TAG_NAME, value="td")]
 
     # Get time blocks "{Period Number} {XX:XX}" as row headers
-    timeblock_row_header = [elem.text.replace('\n', " ") for elem in
-                            driver.find_elements(by=By.CLASS_NAME, value="periodLabel")]
+    timeblock_row_headers = [elem.text.replace('\n', " ") for elem in
+                             driver.find_elements(by=By.CLASS_NAME, value="periodLabel")]
     # Get weekdays "Monday"–"Friday" (x2 because Blue & Orange week) as column headers
     weekday_col_headers = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Monday", "Tuesday", "Wednesday",
                            "Thursday", "Friday"]
 
+    return html_elements, timeblock_row_headers, weekday_col_headers
+
+def create_student_schedule(html, row_headers, col_headers):
     # Use row headers (time blocks) to identify classes under time-block, and append to student schedule
-    for header in timeblock_row_header:
-        header_index = html_elements.index(header)
+    for header in row_headers:
+        header_index = html.index(header)
         week = [block if isinstance(block, str) and not (block.isspace() or not block) else "" for block in
-                html_elements[header_index + 1: header_index + 11]]
+                html[header_index + 1: header_index + 11]]
         student.schedule.append(week)
 
     # Create a Pandas Data Frame to clearly display data
-    timeblock_row_header = [x.split(" ")[-1] for x in timeblock_row_header]
+    row_headers = [x.split(" ")[-1] for x in row_headers]
 
     # Configure Pandas Data Frame printing settings
     pd.set_option('display.max_rows', None)
@@ -93,7 +89,7 @@ def main():
     pd.set_option('display.max_colwidth', None)
 
     # Convert student schedule to Pandas Data Frame
-    student.schedule = pd.DataFrame(data=student.schedule, index=timeblock_row_header, columns=weekday_col_headers)
+    student.schedule = pd.DataFrame(data=student.schedule, index=row_headers, columns=col_headers)
     student.schedule = {'blue': student.schedule.iloc[:, :5], 'orange': student.schedule.iloc[:, 5:]}
 
     print("----- Blue Week -----")
@@ -102,6 +98,7 @@ def main():
     print("----- Orange Week -----")
     print(student.schedule['orange'].to_string(), "\n")
 
+def generate_course_data(row_headers):
     for week in student.schedule:
         week_color = week
         week = student.schedule[week].to_numpy()
@@ -119,7 +116,7 @@ def main():
                         course_location = ""
 
                     # Unpack start and end times from the row header that the current column is located in
-                    start_time, end_time = timeblock_row_header[row_idx].split('-')
+                    start_time, end_time = row_headers[row_idx].split('-')
 
                     # Create course object
                     course_metadata = course.Course(name=course_name, start_time=start_time, end_time=end_time,
@@ -127,19 +124,13 @@ def main():
                                                     location=course_location)
                     student.gcal_schedule.append(course_metadata)
                     course_metadata.print_info()
-
                 else:
                     if 5 <= row_idx <= 6:
                         print("Lunch")
                     else:
                         print("Free")
 
-    ### ------ UPLOADING GOOGLE CALENDAR EVENTS ------ ###
-
-    creds = gcal.load_credentials()
-    # gcal.select_calendar_list(creds=creds)
-    # gcal.create_calendar_list(creds=creds, week='blue', hex_code='#003366')
-
+def prompt_gcal_integration(creds):
     while True:
         try:
             response = input("[CREATE] or [DELETE] events? \n").lower()
@@ -163,6 +154,19 @@ def main():
             pass
         except EOFError:
             break
+
+# HTML Field Names
+def main():
+    post_login()
+    html, row_headers, col_headers = scrape_schedule_page()
+    create_student_schedule(html, row_headers, col_headers)
+    generate_course_data(row_headers)
+
+    creds = gcal.load_credentials()
+    prompt_gcal_integration(creds)
+
+    # gcal.select_calendar_list(creds=creds)
+    # gcal.create_calendar_list(creds=creds, week='blue', hex_code='#003366')
 
     driver.quit()
 
