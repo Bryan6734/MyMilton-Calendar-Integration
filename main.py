@@ -19,7 +19,6 @@ SCHEDULE_URL = "https://mymustangs.milton.edu/student/myschedule/fetch.cfm?TID=2
 # Instantiate a new Student object
 student = student.Student()
 
-
 ### ------ SELENIUM WEB SCRAPING ------ ###
 
 # HTML Field Names
@@ -30,6 +29,7 @@ def main():
     # Configure Selenium settings
     chrome_options = Options()
     chrome_options.add_argument("--window-size=1920,800")
+    chrome_options.add_argument("--headless")
 
     # Instantiate the Selenium Chrome Driver
     service = Service(executable_path="/Users/bryansukidi/Desktop/CS Projects/chromedriver")
@@ -165,7 +165,6 @@ def main():
             break
 
     driver.quit()
-
 
 if __name__ == '__main__':
     main()
