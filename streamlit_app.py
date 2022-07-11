@@ -1,12 +1,21 @@
 import streamlit as st
+import os, sys
 
-# import pandas as pd  # Pandas for data formatting
-# from selenium import webdriver  # Google Chrome driver
-# from selenium.webdriver.chrome.options import Options
-# from selenium.webdriver.chrome.service import Service  # Loading URL
-# from selenium.webdriver.common.by import By  # HTML Identifiers
-# import course
-# import gcal
+@st.experimental_singleton
+def install_ff():
+    os.system('sbase install geckodriver')
+    os.system(
+        'ln -s /home/appuser/venv/lib/python3.10/site-packages/seleniumbase/drivers/geckodriver '
+        '/home/appuser/venv/bin/geckodriver')
+
+_ = install_ff()
+from selenium import webdriver  # Google Chrome driver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service  # Loading URL
+from selenium.webdriver.common.by import By  # HTML Identifiers
+import pandas as pd  # Pandas for data formatting
+import course
+import gcal
 import student
 
 USER_FIELD_NAME = "UserLogin"  # HTML identifier
