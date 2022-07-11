@@ -18,10 +18,7 @@ LOGIN_URL = "https://mymustangs.milton.edu/student/index.cfm?"
 SCHEDULE_URL = "https://mymustangs.milton.edu/student/myschedule/fetch.cfm?TID=2&vSID=SUKB240&pdf=0"
 
 # Instantiate a new Student object
-student = student.Student()
-
 # Load student login info
-student.load_login()
 
 # Configure Selenium settings
 chrome_options = Options()
@@ -34,17 +31,17 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 
 ### ------ SELENIUM WEB SCRAPING ------ ###
 
-def post_login():
+def post_login(username, password):
     # Load the login page
-    driver.get(LOGIN_URL)
+    driver.get("https://mymustangs.milton.edu/student/index.cfm?")
 
     # Post username to username text box
     username_field = driver.find_element(by=By.NAME, value=USER_FIELD_NAME)
-    username_field.send_keys(student.username)
+    username_field.send_keys(username)
 
     # Post password to password text box
     password_field = driver.find_element(by=By.NAME, value=PASSWORD_FIELD_NAME)
-    password_field.send_keys(student.password)
+    password_field.send_keys(password)
 
     # Click submit button
     submit_button = driver.find_element(by=By.NAME, value=SUBMIT_FIELD_NAME)
