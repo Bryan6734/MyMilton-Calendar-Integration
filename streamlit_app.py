@@ -1,12 +1,13 @@
 import streamlit as st
-import pandas as pd  # Pandas for data formatting
-from selenium import webdriver  # Google Chrome driver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service  # Loading URL
-from selenium.webdriver.common.by import By  # HTML Identifiers
-import course
-import gcal
-import student
+
+# import pandas as pd  # Pandas for data formatting
+# from selenium import webdriver  # Google Chrome driver
+# from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.chrome.service import Service  # Loading URL
+# from selenium.webdriver.common.by import By  # HTML Identifiers
+# import course
+# import gcal
+# import student
 
 USER_FIELD_NAME = "UserLogin"  # HTML identifier
 PASSWORD_FIELD_NAME = "UserPassword"  # HTML identifier
