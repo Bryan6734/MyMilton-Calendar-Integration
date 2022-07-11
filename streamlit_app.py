@@ -9,6 +9,7 @@ def install_ff():
         '/home/appuser/venv/bin/geckodriver')
 
 _ = install_ff()
+
 from selenium import webdriver  # Google Chrome driver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service  # Loading URL
