@@ -7,7 +7,7 @@ import streamlit as st
 # from selenium.webdriver.common.by import By  # HTML Identifiers
 # import course
 # import gcal
-# import student
+import student
 
 USER_FIELD_NAME = "UserLogin"  # HTML identifier
 PASSWORD_FIELD_NAME = "UserPassword"  # HTML identifier
