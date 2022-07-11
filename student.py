@@ -2,7 +2,6 @@ import json
 import os
 from json import JSONDecodeError
 
-
 class Student:
     def __init__(self):
 
@@ -10,6 +9,12 @@ class Student:
         self.password = None
         self.schedule = []
         self.gcal_schedule = []
+
+    def load_streamlit_login(self, username, password):
+        self.username = username
+        self.password = password
+        with open('login_info.json', 'w') as login_info:
+            json.dump({'username': self.username, 'password': self.password}, login_info)
 
     def load_login(self):
         try:
